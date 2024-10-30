@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +10,7 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div id="loadingScreen" class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">正在為您登入系統...</p>
+        <p class="text-gray-600">正在初始化系統...</p>
     </div>
 
     <script>
@@ -16,30 +18,28 @@
 
         async function initializeLiff() {
             try {
+                console.log("開始初始化 LIFF");
                 await liff.init({ liffId: LIFF_ID });
-                
-                // 檢查登入狀態
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    // 已登入，取得用戶資料後導向預約頁面
-                    const profile = await liff.getProfile();
-                    console.log("取得用戶資料:", profile); // 加入除錯訊息
-                    
-                    // 確保使用完整的 URL 路徑
-                    const currentUrl = window.location.href;
-                    const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
-                    const bookingUrl = `${baseUrl}booking.html`;
-                    
-                    const params = new URLSearchParams({
-                        userId: profile.userId,
-                        displayName: profile.displayName,
-                        pictureUrl: profile.pictureUrl || ''
-                    });
+                console.log("LIFF 初始化成功");
 
-                    console.log("準備跳轉到:", `${bookingUrl}?${params.toString()}`); // 加入除錯訊息
-                    window.location.href = `${bookingUrl}?${params.toString()}`;
+                // 如果已登入，先登出
+                if (liff.isLoggedIn()) {
+                    console.log("發現使用者已登入，執行登出");
+                    liff.logout();
                 }
+
+                // 顯示登入按鈕
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-center">
+                        <h1 class="text-2xl font-bold mb-4">嘉輪輪胎線上預約系統</h1>
+                        <p class="text-gray-600 mb-8">請使用 LINE 帳號登入</p>
+                        <button onclick="lineLogin()" 
+                                class="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors">
+                            LINE 登入
+                        </button>
+                    </div>
+                `;
+
             } catch (err) {
                 console.error('LIFF 初始化失敗:', err);
                 document.getElementById('loadingScreen').innerHTML = `
@@ -52,7 +52,53 @@
             }
         }
 
-        window.addEventListener('load', initializeLiff);
+        // LINE 登入函數
+        function lineLogin() {
+            console.log("執行登入");
+            liff.login({
+                redirectUri: window.location.href
+            });
+        }
+
+        // 登入後的處理
+        async function handleLogin() {
+            try {
+                const profile = await liff.getProfile();
+                console.log("取得用戶資料:", profile);
+                
+                const currentUrl = window.location.href;
+                const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+                const bookingUrl = `${baseUrl}booking.html`;
+                
+                const params = new URLSearchParams({
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl || ''
+                });
+
+                console.log("準備跳轉到:", `${bookingUrl}?${params.toString()}`);
+                window.location.href = `${bookingUrl}?${params.toString()}`;
+            } catch (err) {
+                console.error('獲取用戶資料失敗:', err);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-red-600 mb-4">獲取用戶資料失敗</div>
+                    <button onclick="window.location.reload()" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        重試
+                    </button>
+                `;
+            }
+        }
+
+        // 頁面載入時初始化
+        window.addEventListener('load', async () => {
+            await initializeLiff();
+            
+            // 如果有登入狀態，處理登入後的流程
+            if (liff.isLoggedIn()) {
+                handleLogin();
+            }
+        });
     </script>
 </body>
 </html>
