@@ -22,10 +22,22 @@
                 await liff.init({ liffId: LIFF_ID });
                 console.log("LIFF 初始化成功");
 
-                // 如果已登入，先登出
-                if (liff.isLoggedIn()) {
-                    console.log("發現使用者已登入，執行登出");
+                // 檢查是否為登出狀態
+                const urlParams = new URLSearchParams(window.location.search);
+                const isLogout = urlParams.get('logout') === 'true';
+
+                if (isLogout && liff.isLoggedIn()) {
+                    console.log("執行登出");
                     liff.logout();
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // 如果已登入，直接獲取資料並跳轉
+                if (liff.isLoggedIn()) {
+                    console.log("已登入，準備獲取用戶資料");
+                    handleLogin();
+                    return;
                 }
 
                 // 顯示登入按鈕
@@ -52,53 +64,42 @@
             }
         }
 
-        // LINE 登入函數
-        function lineLogin() {
-            console.log("執行登入");
-            liff.login({
-                redirectUri: window.location.href
-            });
-        }
-
-        // 登入後的處理
+        // 處理登入後的跳轉
         async function handleLogin() {
             try {
                 const profile = await liff.getProfile();
-                console.log("取得用戶資料:", profile);
-                
-                const currentUrl = window.location.href;
-                const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
-                const bookingUrl = `${baseUrl}booking.html`;
-                
+                console.log("成功獲取用戶資料:", profile);
+
+                // 構建跳轉URL
                 const params = new URLSearchParams({
                     userId: profile.userId,
-                    displayName: profile.displayName,
-                    pictureUrl: profile.pictureUrl || ''
+                    displayName: profile.displayName
                 });
 
-                console.log("準備跳轉到:", `${bookingUrl}?${params.toString()}`);
-                window.location.href = `${bookingUrl}?${params.toString()}`;
+                // 直接跳轉到 booking.html
+                console.log("準備跳轉到 booking.html");
+                window.location.replace('booking.html?' + params.toString());
             } catch (err) {
                 console.error('獲取用戶資料失敗:', err);
-                document.getElementById('loadingScreen').innerHTML = `
-                    <div class="text-red-600 mb-4">獲取用戶資料失敗</div>
-                    <button onclick="window.location.reload()" 
-                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        重試
-                    </button>
-                `;
+                alert('無法獲取用戶資料，請重試');
+                window.location.reload();
+            }
+        }
+
+        // LINE 登入函數
+        function lineLogin() {
+            if (!liff.isLoggedIn()) {
+                console.log("執行登入");
+                liff.login({
+                    redirectUri: window.location.href
+                });
+            } else {
+                handleLogin();
             }
         }
 
         // 頁面載入時初始化
-        window.addEventListener('load', async () => {
-            await initializeLiff();
-            
-            // 如果有登入狀態，處理登入後的流程
-            if (liff.isLoggedIn()) {
-                handleLogin();
-            }
-        });
+        window.addEventListener('load', initializeLiff);
     </script>
 </body>
 </html>
