@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +6,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <!-- 載入畫面 -->
     <div id="loadingScreen" class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p class="text-gray-600">正在為您登入系統...</p>
@@ -17,47 +14,36 @@
     <script>
         const LIFF_ID = "2006514678-bXe3EKjm"; // 你的 LIFF ID
 
-        // 檢查是否從 booking 頁面登出
-        const urlParams = new URLSearchParams(window.location.search);
-        const isLogout = urlParams.get('logout') === 'true';
-
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
                 
-                // 如果是登出狀態，強制執行登出
-                if (isLogout && liff.isLoggedIn()) {
-                    liff.logout();
-                    window.location.href = 'index.html';
-                    return;
-                }
-
                 // 檢查登入狀態
                 if (!liff.isLoggedIn()) {
-                    document.getElementById('loadingScreen').innerHTML = `
-                        <div class="text-center">
-                            <img src="/api/placeholder/120/120" alt="嘉輪輪胎" class="mx-auto mb-6">
-                            <h1 class="text-2xl font-bold mb-4">嘉輪輪胎線上預約系統</h1>
-                            <p class="text-gray-600 mb-8">請使用 LINE 帳號登入</p>
-                            <button onclick="liff.login()" class="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors">
-                                LINE 登入
-                            </button>
-                        </div>
-                    `;
+                    liff.login();
                 } else {
                     // 已登入，取得用戶資料後導向預約頁面
                     const profile = await liff.getProfile();
+                    console.log("取得用戶資料:", profile); // 加入除錯訊息
+                    
+                    // 確保使用完整的 URL 路徑
+                    const currentUrl = window.location.href;
+                    const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+                    const bookingUrl = `${baseUrl}booking.html`;
+                    
                     const params = new URLSearchParams({
                         userId: profile.userId,
                         displayName: profile.displayName,
                         pictureUrl: profile.pictureUrl || ''
                     });
-                    window.location.href = `booking.html?${params.toString()}`;
+
+                    console.log("準備跳轉到:", `${bookingUrl}?${params.toString()}`); // 加入除錯訊息
+                    window.location.href = `${bookingUrl}?${params.toString()}`;
                 }
             } catch (err) {
                 console.error('LIFF 初始化失敗:', err);
                 document.getElementById('loadingScreen').innerHTML = `
-                    <div class="text-red-600 mb-4">系統初始化失敗</div>
+                    <div class="text-red-600 mb-4">系統初始化失敗: ${err.message}</div>
                     <button onclick="window.location.reload()" 
                             class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                         重試
@@ -66,7 +52,6 @@
             }
         }
 
-        // 頁面載入時初始化
         window.addEventListener('load', initializeLiff);
     </script>
 </body>
