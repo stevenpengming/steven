@@ -3,134 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>嘉輪輪胎 - 預約保養系統</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
-    <!-- LINE Login SDK -->
+    <title>嘉輪輪胎 - LINE 會員登入</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
 </head>
-<body class="bg-gray-50">
-    <nav class="bg-blue-600 text-white p-3 sm:p-4 fixed top-0 w-full z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold">嘉輪輪胎 - 預約保養</h1>
-            <div id="loginStatus" class="text-sm"></div>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- 載入畫面 -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">載入中...</p>
         </div>
-    </nav>
+    </div>
 
-    <!-- LINE Login 頁面 -->
-    <div id="loginPage" class="container mx-auto pt-24 pb-6 px-3 sm:px-4 hidden">
-        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 text-center">
-            <h2 class="text-xl font-semibold mb-4">請先登入</h2>
-            <p class="mb-6 text-gray-600">使用 LINE 帳號登入以進行預約</p>
-            <button id="lineLoginBtn" class="bg-green-500 text-white px-6 py-3 rounded-md hover:bg-green-600 transition-colors">
+    <!-- 未登入時的畫面 -->
+    <div id="loginContainer" class="fixed inset-0 bg-white z-40 flex items-center justify-center hidden">
+        <div class="text-center p-8 rounded-lg">
+            <img src="/api/placeholder/120/120" alt="嘉輪輪胎" class="mx-auto mb-6">
+            <h1 class="text-2xl font-bold mb-4">嘉輪輪胎線上預約系統</h1>
+            <p class="text-gray-600 mb-8">請使用 LINE 帳號登入以進行預約</p>
+            <button id="lineLoginBtn" class="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.348 0 .63.285.63.63 0 .349-.282.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.346 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"></path>
+                </svg>
                 使用 LINE 登入
             </button>
         </div>
     </div>
 
-    <!-- 預約表單 (原有內容) -->
-    <div id="bookingForm" class="container mx-auto pt-16 pb-6 px-3 sm:px-4 hidden">
-        <!-- 原有的表單內容 -->
-        <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-4 sm:p-6">
-            <h2 class="text-lg sm:text-xl font-semibold mb-4">預約保養服務</h2>
-            
-            <form class="space-y-4 sm:space-y-6">
-                <!-- 車主資訊 -->
-                <div class="bg-gray-50 p-3 sm:p-4 rounded-md">
-                    <h3 class="text-base sm:text-lg font-medium mb-3">車主資訊</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-                            <input type="text" id="userName" class="w-full p-3 text-base border border-gray-300 rounded-md" required readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">聯絡電話</label>
-                            <input type="tel" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
-                            <input type="email" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 其餘表單內容保持不變 -->
-                <!-- ... -->
-            </form>
-        </div>
-    </div>
-
-    <footer class="bg-gray-800 text-white py-4 mt-6">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-sm">© 2024 固泰銘公司 版權所有</p>
-        </div>
-    </footer>
-
     <script>
-        // LINE LIFF 初始化
+        let isLineLoginChecked = false;
+
         async function initializeLiff() {
             try {
                 // 替換成你的 LIFF ID
                 await liff.init({ liffId: "2006514678-bXe3EKjm" });
+                isLineLoginChecked = true;
                 
-                // 檢查是否已登入
-                if (liff.isLoggedIn()) {
-                    handleLoggedIn();
+                if (!liff.isLoggedIn()) {
+                    // 顯示登入按鈕
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('loginContainer').classList.remove('hidden');
                 } else {
-                    showLoginPage();
+                    // 已登入，重定向到預約系統
+                    redirectToBookingSystem();
                 }
             } catch (err) {
                 console.error('LIFF 初始化失敗:', err);
+                alert('系統初始化失敗，請稍後再試');
             }
         }
 
-        // 處理已登入狀態
-        async function handleLoggedIn() {
-            try {
-                const profile = await liff.getProfile();
-                document.getElementById('userName').value = profile.displayName;
-                document.getElementById('loginStatus').innerHTML = `
-                    <div class="flex items-center">
-                        <img src="${profile.pictureUrl}" class="w-8 h-8 rounded-full mr-2">
-                        <span>${profile.displayName}</span>
-                        <button onclick="logout()" class="ml-4 text-sm bg-red-500 px-2 py-1 rounded">登出</button>
-                    </div>
-                `;
-                showBookingForm();
-            } catch (err) {
-                console.error('獲取用戶資料失敗:', err);
-            }
+        function redirectToBookingSystem() {
+            // 獲取使用者資料並加入 URL 參數
+            liff.getProfile()
+                .then(profile => {
+                    const params = new URLSearchParams({
+                        userId: profile.userId,
+                        displayName: profile.displayName,
+                        pictureUrl: profile.pictureUrl || ''
+                    });
+                    // 重定向到預約系統頁面
+                    window.location.href = `booking.html?${params.toString()}`;
+                })
+                .catch(err => {
+                    console.error('獲取使用者資料失敗:', err);
+                    alert('無法獲取使用者資料，請重新登入');
+                });
         }
 
-        // 顯示登入頁面
-        function showLoginPage() {
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('bookingForm').classList.add('hidden');
-        }
-
-        // 顯示預約表單
-        function showBookingForm() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('bookingForm').classList.remove('hidden');
-        }
-
-        // LINE 登入
-        function lineLogin() {
+        // 登入按鈕點擊事件
+        document.getElementById('lineLoginBtn').addEventListener('click', () => {
             if (!liff.isLoggedIn()) {
                 liff.login();
             }
-        }
-
-        // 登出
-        function logout() {
-            liff.logout();
-            location.reload();
-        }
-
-        // 綁定登入按鈕事件
-        document.getElementById('lineLoginBtn').addEventListener('click', lineLogin);
+        });
 
         // 初始化 LIFF
         initializeLiff();
+
+        // 防止未檢查完成就離開頁面
+        window.addEventListener('beforeunload', (event) => {
+            if (!isLineLoginChecked) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
     </script>
 </body>
 </html>
