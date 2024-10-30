@@ -14,57 +14,7 @@
         <p class="text-gray-600">正在為您登入系統...</p>
     </div>
 
-    <script>
-        async function initializeLiff() {
-            try {
-                // 替換成你的 LIFF ID
-                await liff.init({ liffId: "2006514678-bXe3EKjm" });
-                
-                if (!liff.isLoggedIn()) {
-                    // 直接觸發 LINE Login
-                    liff.login();
-                } else {
-                    // 已登入，直接重定向到預約系統
-                    redirectToBookingSystem();
-                }
-            } catch (err) {
-                console.error('LIFF 初始化失敗:', err);
-                document.getElementById('loadingScreen').innerHTML = `
-                    <div class="text-red-600 mb-4">系統初始化失敗</div>
-                    <button onclick="window.location.reload()" 
-                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        重試
-                    </button>
-                `;
-            }
-        }
-
-        function redirectToBookingSystem() {
-            // 獲取使用者資料並加入 URL 參數
-            liff.getProfile()
-                .then(profile => {
-                    const params = new URLSearchParams({
-                        userId: profile.userId,
-                        displayName: profile.displayName,
-                        pictureUrl: profile.pictureUrl || ''
-                    });
-                    // 重定向到預約系統頁面
-                    window.location.href = `booking.html?${params.toString()}`;
-                })
-                .catch(err => {
-                    console.error('獲取使用者資料失敗:', err);
-                    document.getElementById('loadingScreen').innerHTML = `
-                        <div class="text-red-600 mb-4">無法獲取使用者資料</div>
-                        <button onclick="window.location.reload()" 
-                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                            重試
-                        </button>
-                    `;
-                });
-        }
-
-        // 頁面載入時立即初始化並檢查登入狀態
-        window.addEventListener('load', initializeLiff);
-    </script>
+    <!-- 引入 JavaScript -->
+    <script src="js/login.js"></script>
 </body>
 </html>
