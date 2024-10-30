@@ -3,54 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>嘉輪輪胎 - LINE 會員登入</title>
+    <title>嘉輪輪胎 - 自動登入中</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <!-- 載入畫面 -->
-    <div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">載入中...</p>
-        </div>
-    </div>
-
-    <!-- 未登入時的畫面 -->
-    <div id="loginContainer" class="fixed inset-0 bg-white z-40 flex items-center justify-center hidden">
-        <div class="text-center p-8 rounded-lg">
-            <img src="/api/placeholder/120/120" alt="嘉輪輪胎" class="mx-auto mb-6">
-            <h1 class="text-2xl font-bold mb-4">嘉輪輪胎線上預約系統</h1>
-            <p class="text-gray-600 mb-8">請使用 LINE 帳號登入以進行預約</p>
-            <button id="lineLoginBtn" class="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors flex items-center justify-center mx-auto">
-                <svg class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.348 0 .63.285.63.63 0 .349-.282.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.346 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"></path>
-                </svg>
-                使用 LINE 登入
-            </button>
-        </div>
+    <div id="loadingScreen" class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">正在為您登入系統...</p>
     </div>
 
     <script>
-        let isLineLoginChecked = false;
-
         async function initializeLiff() {
             try {
                 // 替換成你的 LIFF ID
                 await liff.init({ liffId: "2006514678-bXe3EKjm" });
-                isLineLoginChecked = true;
                 
                 if (!liff.isLoggedIn()) {
-                    // 顯示登入按鈕
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    document.getElementById('loginContainer').classList.remove('hidden');
+                    // 直接觸發 LINE Login
+                    liff.login();
                 } else {
-                    // 已登入，重定向到預約系統
+                    // 已登入，直接重定向到預約系統
                     redirectToBookingSystem();
                 }
             } catch (err) {
                 console.error('LIFF 初始化失敗:', err);
-                alert('系統初始化失敗，請稍後再試');
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-red-600 mb-4">系統初始化失敗</div>
+                    <button onclick="window.location.reload()" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        重試
+                    </button>
+                `;
             }
         }
 
@@ -68,27 +53,18 @@
                 })
                 .catch(err => {
                     console.error('獲取使用者資料失敗:', err);
-                    alert('無法獲取使用者資料，請重新登入');
+                    document.getElementById('loadingScreen').innerHTML = `
+                        <div class="text-red-600 mb-4">無法獲取使用者資料</div>
+                        <button onclick="window.location.reload()" 
+                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            重試
+                        </button>
+                    `;
                 });
         }
 
-        // 登入按鈕點擊事件
-        document.getElementById('lineLoginBtn').addEventListener('click', () => {
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            }
-        });
-
-        // 初始化 LIFF
-        initializeLiff();
-
-        // 防止未檢查完成就離開頁面
-        window.addEventListener('beforeunload', (event) => {
-            if (!isLineLoginChecked) {
-                event.preventDefault();
-                event.returnValue = '';
-            }
-        });
+        // 頁面載入時立即初始化並檢查登入狀態
+        window.addEventListener('load', initializeLiff);
     </script>
 </body>
 </html>
