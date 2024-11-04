@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>嘉輪輪胎 - 預約保養系統</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body class="bg-gray-50">
     <nav class="bg-blue-600 text-white p-3 sm:p-4 fixed top-0 w-full z-50">
@@ -17,22 +18,22 @@
         <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 class="text-lg sm:text-xl font-semibold mb-4">預約保養服務</h2>
             
-            <form class="space-y-4 sm:space-y-6">
+            <form id="bookingForm" class="space-y-4 sm:space-y-6">
                 <!-- 車主資訊 -->
                 <div class="bg-gray-50 p-3 sm:p-4 rounded-md">
                     <h3 class="text-base sm:text-lg font-medium mb-3">車主資訊</h3>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-                            <input type="text" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="text" name="name" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">聯絡電話</label>
-                            <input type="tel" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="tel" name="phone" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
-                            <input type="email" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="email" name="email" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                     </div>
                 </div>
@@ -43,11 +44,11 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">車牌號碼</label>
-                            <input type="text" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="text" name="plateNumber" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">行駛里程數</label>
-                            <input type="number" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="number" name="mileage" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                     </div>
                 </div>
@@ -58,7 +59,7 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">預約據點</label>
-                            <select class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <select name="location" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                                 <option value="">請選擇服務據點</option>
                                 <option value="hsinchu">嘉輪輪胎新竹店</option>
                                 <option value="bade">嘉輪輪胎八德店</option>
@@ -66,11 +67,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">預約日期</label>
-                            <input type="date" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <input type="date" name="date" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">預約時段</label>
-                            <select class="w-full p-3 text-base border border-gray-300 rounded-md" required>
+                            <select name="timeSlot" class="w-full p-3 text-base border border-gray-300 rounded-md" required>
                                 <option value="">請選擇時段</option>
                                 <option value="morning">上午 (09:00-12:00)</option>
                                 <option value="afternoon">下午 (13:00-17:00)</option>
@@ -84,19 +85,19 @@
                     <h3 class="text-base sm:text-lg font-medium mb-3">保養項目</h3>
                     <div class="space-y-3">
                         <div class="flex items-center">
-                            <input type="checkbox" id="service1" class="w-5 h-5 mr-3">
+                            <input type="checkbox" name="services" value="定期保養檢查" id="service1" class="w-5 h-5 mr-3">
                             <label for="service1" class="text-base text-gray-700">定期保養檢查</label>
                         </div>
                         <div class="flex items-center">
-                            <input type="checkbox" id="service2" class="w-5 h-5 mr-3">
+                            <input type="checkbox" name="services" value="引擎機油更換" id="service2" class="w-5 h-5 mr-3">
                             <label for="service2" class="text-base text-gray-700">引擎機油更換</label>
                         </div>
                         <div class="flex items-center">
-                            <input type="checkbox" id="service3" class="w-5 h-5 mr-3">
+                            <input type="checkbox" name="services" value="剎車系統檢查" id="service3" class="w-5 h-5 mr-3">
                             <label for="service3" class="text-base text-gray-700">剎車系統檢查</label>
                         </div>
                         <div class="flex items-center">
-                            <input type="checkbox" id="service4" class="w-5 h-5 mr-3">
+                            <input type="checkbox" name="services" value="輪胎定位調整" id="service4" class="w-5 h-5 mr-3">
                             <label for="service4" class="text-base text-gray-700">輪胎定位調整</label>
                         </div>
                     </div>
@@ -105,12 +106,12 @@
                 <!-- 備註 -->
                 <div class="bg-gray-50 p-3 sm:p-4 rounded-md">
                     <h3 class="text-base sm:text-lg font-medium mb-3">備註說明</h3>
-                    <textarea class="w-full p-3 text-base border border-gray-300 rounded-md h-24" placeholder="請填寫其他需求或說明..."></textarea>
+                    <textarea name="notes" class="w-full p-3 text-base border border-gray-300 rounded-md h-24" placeholder="請填寫其他需求或說明..."></textarea>
                 </div>
 
                 <!-- 提交按鈕 -->
                 <div class="flex justify-center pt-2">
-                    <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 text-lg rounded-md hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-18 py-14 text-lg rounded-md hover:bg-blue-700 transition-colors">
                         確認預約
                     </button>
                 </div>
@@ -125,9 +126,73 @@
     </footer>
 
     <script>
-        document.querySelector('form').addEventListener('submit', function(e) {
+        // 初始化 LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: "2006514678-bXe3EKjm" }); // 請替換成您的 LIFF ID
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            } catch (err) {
+                console.error('LIFF 初始化失敗', err);
+            }
+        }
+
+        // 格式化預約資訊
+        function formatBookingInfo(formData) {
+            const services = formData.getAll('services').join('、') || '無';
+            const locationMap = {
+                'hsinchu': '新竹店',
+                'bade': '八德店'
+            };
+            const timeSlotMap = {
+                'morning': '上午 (09:00-12:00)',
+                'afternoon': '下午 (13:00-17:00)'
+            };
+
+            return `=== 預約保養資訊 ===\n` +
+                `姓名：${formData.get('name')}\n` +
+                `電話：${formData.get('phone')}\n` +
+                `信箱：${formData.get('email')}\n` +
+                `車牌：${formData.get('plateNumber')}\n` +
+                `里程：${formData.get('mileage')} 公里\n` +
+                `預約據點：${locationMap[formData.get('location')]}\n` +
+                `預約日期：${formData.get('date')}\n` +
+                `預約時段：${timeSlotMap[formData.get('timeSlot')]}\n` +
+                `保養項目：${services}\n` +
+                `備註：${formData.get('notes') || '無'}\n` +
+                `=================`;
+        }
+
+        // 初始化 LIFF
+        initializeLiff();
+
+        // 處理表單提交
+        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('預約已送出！我們將盡快與您聯繫確認。');
+            
+            const formData = new FormData(this);
+            const bookingInfo = formatBookingInfo(formData);
+
+            try {
+                // 發送訊息到 LINE 對話框
+                if (liff.isLoggedIn()) {
+                    await liff.sendMessages([
+                        {
+                            type: 'text',
+                            text: bookingInfo
+                        }
+                    ]);
+                    alert('預約資訊已送出！請查看 LINE 對話框。');
+                    liff.closeWindow();
+                } else {
+                    alert('請先登入 LINE');
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('發送訊息失敗', error);
+                alert('發送預約資訊失敗，請稍後再試。');
+            }
         });
     </script>
 </body>
