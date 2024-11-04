@@ -176,19 +176,26 @@
                     return;
                 }
 
-                // 發送預約資訊到後端 API
-                const response = await fetch('https://script.google.com/macros/s/AKfycbzISLrRyE9vy9XrkouuRjBVzBJxbJFnrYX9hoQxSe6Sfn3HjTDaNRHW-71GXXUYlb0wyA/exec', {
+                // 發送預約資訊到 Google Apps Script
+                const response = await fetch('https://script.google.com/macros/s/AKfycbz6iYo-Es64YC2UUr1P7gpQzSoTmT61RLfAYvFngMbaYihcy0HrFk9Oo3p7lIExBTRWjQ/exec', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer MFX/M6qgOnUiUayTsNHutCK3wz9hFPnjA4eMqJIWMlcslrdRw6jxkxBbmwpFV9V3QYFTtTMWO3wW67k3LMQ1T9eAGs0rclNS0MXtSXBIykMrmL9C7lJE0PSWtmH5/i6dB0bmL1odyJvj2XCbiogU2wdB04t89/1O/w1cDnyilFU='
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        to: userId,
-                        messages: [{
-                            type: 'text',
-                            text: bookingInfo
-                        }]
+                        type: 'booking',  // 添加類型標識
+                        userId: userId,
+                        name: formData.get('name'),
+                        phone: formData.get('phone'),
+                        email: formData.get('email'),
+                        plateNumber: formData.get('plateNumber'),
+                        mileage: formData.get('mileage'),
+                        location: formData.get('location'),
+                        date: formData.get('date'),
+                        timeSlot: formData.get('timeSlot'),
+                        services: Array.from(formData.getAll('services')),
+                        notes: formData.get('notes'),
+                        messageText: bookingInfo
                     })
                 });
 
