@@ -111,7 +111,7 @@
 
                 <!-- 提交按鈕 -->
                 <div class="flex justify-center pt-2">
-                    <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-18 py-14 text-lg rounded-md hover:bg-blue-700 transition-colors">
+                    <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 text-lg rounded-md hover:bg-blue-700 transition-colors">
                         確認預約
                     </button>
                 </div>
@@ -129,7 +129,7 @@
         // 初始化 LIFF
         async function initializeLiff() {
             try {
-                await liff.init({ liffId: "2006514678-bXe3EKjm" }); // 請替換成您的 LIFF ID
+                await liff.init({ liffId: "YOUR_LIFF_ID" }); // 請替換成您的 LIFF ID
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 }
@@ -175,23 +175,61 @@
             const bookingInfo = formatBookingInfo(formData);
 
             try {
-                // 發送訊息到 LINE 對話框
-                if (liff.isLoggedIn()) {
-                    await liff.sendMessages([
-                        {
-                            type: 'text',
-                            text: bookingInfo
-                        }
-                    ]);
-                    alert('預約資訊已送出！請查看 LINE 對話框。');
-                    liff.closeWindow();
-                } else {
-                    alert('請先登入 LINE');
+                // 檢查 LIFF 是否正確初始化
+                if (!liff.isInClient() && !liff.isLoggedIn()) {
+                    alert('請在 LINE APP 內開啟此頁面，或是登入您的 LINE 帳號');
                     liff.login();
+                    return;
                 }
+
+                // 檢查網路連線
+                if (!navigator.onLine) {
+                    alert('網路連線異常，請檢查您的網路狀態後重試');
+                    return;
+                }
+
+                // 發送訊息到 LINE 對話框
+                await liff.sendMessages([
+                    {
+                        type: 'text',
+                        text: bookingInfo
+                    }
+                ]);
+
+                // 發送成功
+                alert('預約資訊已送出！請查看 LINE 對話框。');
+                
+                // 儲存成功後關閉視窗
+                setTimeout(() => {
+                    liff.closeWindow();
+                }, 1000);
+
             } catch (error) {
                 console.error('發送訊息失敗', error);
-                alert('發送預約資訊失敗，請稍後再試。');
+                
+                // 根據錯誤類型顯示不同訊息
+                if (error.code) {
+                    switch (error.code) {
+                        case 'INVALID_ACCESS_TOKEN':
+                            alert('LINE 登入已過期，請重新登入');
+                            liff.login();
+                            break;
+                        case 'NETWORK_ERROR':
+                            alert('網路連線異常，請檢查網路後重試');
+                            break;
+                        case 'INVALID_ARGUMENT':
+                            alert('資料格式錯誤，請確認填寫內容是否正確');
+                            break;
+                        case 'UNAUTHORIZED':
+                            alert('未取得授權，請重新登入');
+                            liff.login();
+                            break;
+                        default:
+                            alert(`發送預約資訊失敗 (${error.code})，請稍後再試或聯繫客服`);
+                    }
+                } else {
+                    alert('系統異常，請稍後再試或聯繫客服');
+                }
             }
         });
     </script>
