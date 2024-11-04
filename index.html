@@ -207,96 +207,131 @@
             document.body.appendChild(loadingDiv);
         }
 
-        // 處理表單提交
-        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // 禁用提交按鈕，避免重複提交
-            const submitButton = this.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.textContent = '預約送出中...';
-            
-            const formData = new FormData(this);
-            const bookingInfo = formatBookingInfo(formData);
-            const userId = formData.get('userId');
+        // 設定日期限制
+const dateInput = document.querySelector('input[name="date"]');
+const today = new Date().toISOString().split('T')[0];
+dateInput.min = today;
 
-            // 顯示載入中訊息
-            showLoading();
+// 處理表單提交
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // 檢查是否選擇了保養項目
+    if (Array.from(formData.getAll('services')).length === 0) {
+        showMessage('error', '請至少選擇一項保養項目');
+        return;
+    }
+    
+    // 檢查日期是否有效
+    const selectedDate = new Date(formData.get('date'));
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    if (selectedDate < currentDate) {
+        showMessage('error', '請選擇有效的預約日期');
+        return;
+    }
+    
+    // 禁用提交按鈕，避免重複提交
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = '預約送出中...';
+    
+    // 顯示載入中訊息
+    showLoading();
 
-            // 準備要發送的資料
-            const submitData = {
-                type: 'booking',
-                userId: userId,
-                name: formData.get('name'),
-                phone: formData.get('phone'),
-                email: formData.get('email'),
-                plateNumber: formData.get('plateNumber'),
-                mileage: formData.get('mileage'),
-                location: formData.get('location'),
-                date: formData.get('date'),
-                timeSlot: formData.get('timeSlot'),
-                services: Array.from(formData.getAll('services')),
-                notes: formData.get('notes'),
-                messageText: bookingInfo
-            };
+    // 準備要發送的資料
+    const submitData = {
+        type: 'booking',
+        userId: formData.get('userId'),
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        plateNumber: formData.get('plateNumber'),
+        mileage: formData.get('mileage'),
+        location: formData.get('location'),
+        date: formData.get('date'),
+        timeSlot: formData.get('timeSlot'),
+        services: Array.from(formData.getAll('services')),
+        notes: formData.get('notes'),
+        messageText: formatBookingInfo(formData)
+    };
 
-            try {
-                // 使用 Promise.race 設定超時
-                const timeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('請求超時，請稍後再試')), 30000);
-                });
+    try {
+        console.log('發送預約資料:', submitData);
 
-                const fetchPromise = fetch('https://script.google.com/macros/s/AKfycbxR1y8aK41FBbD6yNKh77x9cMsWJNM6chfhNhjhjYlSIaRoBUxC9fHU9EHiWQ0JVFjZXQ/exec', {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submitData)
-                });
-
-                // 使用 Promise.race 來處理請求
-                const response = await Promise.race([fetchPromise, timeout]);
-
-                // 檢查回應
-                if (!response.ok) {
-                    throw new Error(`伺服器回應錯誤：${response.status}`);
-                }
-
-                const result = await response.json();
-                if (result.status === 'error') {
-                    throw new Error(result.message || '預約失敗，請稍後再試');
-                }
-
-                // 顯示成功訊息
-                showMessage('success', '預約資訊已成功送出！', '請查看 LINE 訊息確認預約詳情');
-
-                // 重置表單
-                this.reset();
-
-            } catch (error) {
-                console.error('發送預約失敗:', error);
-                
-                // 顯示錯誤訊息
-                let errorMessage = '預約失敗，請稍後重試或聯繫客服';
-                if (error.message.includes('請求超時')) {
-                    errorMessage = '連線逾時，請確認網路狀態後重試';
-                } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    errorMessage = '網路連線異常，請確認網路狀態後重試';
-                } else if (error.response) {
-                    errorMessage = `預約失敗：${error.response.message || '請稍後重試'}`;
-                }
-                
-                showMessage('error', errorMessage, error.message);
-            } finally {
-                // 移除載入中訊息
-                document.getElementById('loadingMessage')?.remove();
-                
-                // 重新啟用提交按鈕
-                submitButton.disabled = false;
-                submitButton.textContent = '確認預約';
-            }
+        // 使用 Promise.race 設定超時
+        const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('請求超時，請稍後再試')), 30000);
         });
+
+        const fetchPromise = fetch('https://script.google.com/macros/s/AKfycbxwJRBsQHhYZgYzrunHswkbuIdxUG7aTNN1PFg5a19OheqDzDuNK3B0yExfSlLoTXLxdA/exec', {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(submitData)
+        });
+
+        // 使用 Promise.race 來處理請求
+        const response = await Promise.race([fetchPromise, timeout]);
+        
+        // 記錄回應狀態
+        console.log('回應狀態:', response.status);
+        console.log('回應標頭:', Object.fromEntries(response.headers));
+        
+        // 檢查回應
+        if (!response.ok) {
+            throw new Error(`伺服器回應錯誤：${response.status}`);
+        }
+
+        // 先取得回應文字
+        const responseText = await response.text();
+        console.log('回應內容:', responseText);
+        
+        // 解析 JSON
+        const result = JSON.parse(responseText);
+        
+        if (result.status === 'error') {
+            throw new Error(result.message || '預約失敗，請稍後再試');
+        }
+
+        // 顯示成功訊息
+        showMessage('success', '預約資訊已成功送出！', '請查看 LINE 訊息確認預約詳情');
+
+        // 重置表單
+        this.reset();
+
+    } catch (error) {
+        console.error('發送預約失敗:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // 顯示錯誤訊息
+        let errorMessage = '預約失敗，請稍後重試或聯繫客服';
+        if (error.message.includes('請求超時')) {
+            errorMessage = '連線逾時，請確認網路狀態後重試';
+        } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            errorMessage = '網路連線異常，請確認網路狀態後重試';
+        } else if (error.response) {
+            errorMessage = `預約失敗：${error.response.message || '請稍後重試'}`;
+        }
+        
+        showMessage('error', errorMessage, error.message);
+    } finally {
+        // 移除載入中訊息
+        document.getElementById('loadingMessage')?.remove();
+        
+        // 重新啟用提交按鈕
+        submitButton.disabled = false;
+        submitButton.textContent = '確認預約';
+    }
+});
     </script>
 </body>
 </html>
